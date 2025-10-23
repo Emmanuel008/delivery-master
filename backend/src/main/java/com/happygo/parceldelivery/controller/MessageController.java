@@ -8,7 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -40,5 +44,83 @@ public class MessageController {
     public ResponseEntity<Message> markAsSent(@PathVariable Long id) {
         Message message = messageService.markAsSent(id);
         return ResponseEntity.ok(message);
+    }
+    
+    @GetMapping("/sample")
+    public ResponseEntity<Map<String, String>> getSampleMessage() {
+        Map<String, String> sampleMessage = new HashMap<>();
+        sampleMessage.put("content", "Hello! Your parcel delivery request has been received. We will contact you shortly to confirm delivery details. Thank you for choosing our service!");
+        sampleMessage.put("phoneNumber", "+255625313162");
+        return ResponseEntity.ok(sampleMessage);
+    }
+    
+    @PostMapping("/highlight-phone")
+    public ResponseEntity<Map<String, Object>> highlightPhoneNumbers(@RequestBody Map<String, String> request) {
+        String content = request.get("content");
+        if (content == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Content is required"));
+        }
+        
+        // Phone number regex pattern (supports various formats)
+        Pattern phonePattern = Pattern.compile("(\\+?\\d{1,4}[-\\s]?)?(\\d{3,4}[-\\s]?\\d{3,4}[-\\s]?\\d{3,4})");
+        Matcher matcher = phonePattern.matcher(content);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("originalContent", content);
+        
+        // Find all phone numbers
+        StringBuilder highlightedContent = new StringBuilder();
+        int lastEnd = 0;
+        
+        while (matcher.find()) {
+            // Add text before the phone number
+            highlightedContent.append(content, lastEnd, matcher.start());
+            
+            // Add highlighted phone number
+            String phoneNumber = matcher.group();
+            highlightedContent.append("<span style='background-color: #ffff00; font-weight: bold; padding: 2px 4px; border-radius: 3px;'>")
+                            .append(phoneNumber)
+                            .append("</span>");
+            
+            lastEnd = matcher.end();
+        }
+        
+        // Add remaining text
+        highlightedContent.append(content.substring(lastEnd));
+        
+        result.put("highlightedContent", highlightedContent.toString());
+        result.put("phoneNumbersFound", matcher.groupCount() > 0);
+        
+        return ResponseEntity.ok(result);
+    }
+    
+    @PostMapping("/send-with-highlight")
+    public ResponseEntity<Map<String, Object>> sendMessageWithHighlight(@Valid @RequestBody MessageDto dto) {
+        // Create the message
+        Message created = messageService.createMessage(dto);
+        
+        // Highlight phone numbers in the content
+        Pattern phonePattern = Pattern.compile("(\\+?\\d{1,4}[-\\s]?)?(\\d{3,4}[-\\s]?\\d{3,4}[-\\s]?\\d{3,4})");
+        Matcher matcher = phonePattern.matcher(dto.getContent());
+        
+        StringBuilder highlightedContent = new StringBuilder();
+        int lastEnd = 0;
+        
+        while (matcher.find()) {
+            highlightedContent.append(dto.getContent(), lastEnd, matcher.start());
+            String phoneNumber = matcher.group();
+            highlightedContent.append("<span style='background-color: #ffff00; font-weight: bold; padding: 2px 4px; border-radius: 3px;'>")
+                            .append(phoneNumber)
+                            .append("</span>");
+            lastEnd = matcher.end();
+        }
+        highlightedContent.append(dto.getContent().substring(lastEnd));
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", created);
+        response.put("highlightedContent", highlightedContent.toString());
+        response.put("phoneNumberHighlighted", matcher.groupCount() > 0);
+        
+        return ResponseEntity.ok(response);
     }
 }
