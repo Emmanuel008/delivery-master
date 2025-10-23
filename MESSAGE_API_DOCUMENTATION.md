@@ -75,7 +75,7 @@ Retrieves a specific message by its ID.
 {
   "id": 1,
   "content": "Message content",
-  "phoneNumber": "+255 625313162",
+  "phoneNumber": "255625313162",
   "createdAt": "2025-10-23T22:36:36.99888",
   "isSent": false
 }
@@ -91,7 +91,7 @@ Marks a message as sent.
 {
   "id": 1,
   "content": "Message content",
-  "phoneNumber": "+255 123 456 789",
+  "phoneNumber": "255625313162",
   "createdAt": "2025-10-23T22:36:36.99888",
   "isSent": true
 }
@@ -105,15 +105,15 @@ Highlights phone numbers in the provided content with HTML styling.
 **Request Body:**
 ```json
 {
-  "content": "Please call us at +255 123 456 789 or 0712345678 for delivery updates"
+  "content": "Please call us at 255625313162 or 0712345678 for delivery updates"
 }
 ```
 
 **Response:**
 ```json
 {
-  "originalContent": "Please call us at +255 123 456 789 or 0712345678 for delivery updates",
-  "highlightedContent": "Please call us at <span style='background-color: #ffff00; font-weight: bold; padding: 2px 4px; border-radius: 3px;'>+255 123 456 789</span> or <span style='background-color: #ffff00; font-weight: bold; padding: 2px 4px; border-radius: 3px;'>0712345678</span> for delivery updates",
+  "originalContent": "Please call us at 255625313162 or 0712345678 for delivery updates",
+  "highlightedContent": "Please call us at <span style='background-color: #ffff00; font-weight: bold; padding: 2px 4px; border-radius: 3px;'>255625313162</span> or <span style='background-color: #ffff00; font-weight: bold; padding: 2px 4px; border-radius: 3px;'>0712345678</span> for delivery updates",
   "phoneNumbersFound": true
 }
 ```
@@ -126,8 +126,8 @@ Creates a message and returns it with highlighted phone numbers in the content.
 **Request Body:**
 ```json
 {
-  "content": "Your parcel is ready! Contact us at +255 987 654 321 for pickup",
-  "phoneNumber": "+255 987 654 321"
+  "content": "Your parcel is ready! Contact us at 255625313162 for pickup",
+  "phoneNumber": "255625313162"
 }
 ```
 
@@ -136,12 +136,12 @@ Creates a message and returns it with highlighted phone numbers in the content.
 {
   "message": {
     "id": 3,
-    "content": "Your parcel is ready! Contact us at +255 987 654 321 for pickup",
-    "phoneNumber": "+255 987 654 321",
+    "content": "Your parcel is ready! Contact us at 255625313162 for pickup",
+    "phoneNumber": "255625313162",
     "createdAt": "2025-10-23T22:36:36.99888",
     "isSent": false
   },
-  "highlightedContent": "Your parcel is ready! Contact us at <span style='background-color: #ffff00; font-weight: bold; padding: 2px 4px; border-radius: 3px;'>+255 987 654 321</span> for pickup",
+  "highlightedContent": "Your parcel is ready! Contact us at <span style='background-color: #ffff00; font-weight: bold; padding: 2px 4px; border-radius: 3px;'>255625313162</span> for pickup",
   "phoneNumberHighlighted": true
 }
 ```
@@ -149,7 +149,7 @@ Creates a message and returns it with highlighted phone numbers in the content.
 ## Phone Number Detection
 
 The API uses a comprehensive regex pattern to detect phone numbers in various formats:
-- International format: `+255 123 456 789`
+- International format: `255625313162`
 - Local format: `0712345678`
 - With dashes: `+255-123-456-789`
 - With spaces: `+255 123 456 789`
@@ -185,12 +185,12 @@ curl -X GET http://localhost:8080/api/messages/sample
 ```bash
 curl -X POST http://localhost:8080/api/messages/highlight-phone \
   -H "Content-Type: application/json" \
-  -d '{"content": "Call us at +255 123 456 789 for support"}'
+  -d '{"content": "Call us at 255625313162 for support"}'
 ```
 
 ### Test Send with Highlight
 ```bash
 curl -X POST http://localhost:8080/api/messages/send-with-highlight \
   -H "Content-Type: application/json" \
-  -d '{"content": "Delivery ready! Call +255 987 654 321", "phoneNumber": "+255 987 654 321"}'
+  -d '{"content": "Delivery ready! Call 255625313162", "phoneNumber": "255625313162"}'
 ```
