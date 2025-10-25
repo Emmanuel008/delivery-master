@@ -123,4 +123,10 @@ public class MessageController {
         
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/send-sms")
+    public ResponseEntity<Map<String, Object>> sendSms(@Valid @RequestBody MessageDto dto) {
+        Map<String, Object> result = messageService.sendSms(dto);
+        return ResponseEntity.ok(result);
+    }
 }
