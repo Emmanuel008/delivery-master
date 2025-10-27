@@ -6,6 +6,7 @@
 /Users/admin/happygo/backend/src/main/java/com/happygo/parceldelivery/repository/ParcelRequestRepository.java
 /Users/admin/happygo/backend/src/main/java/com/happygo/parceldelivery/service/ParcelRequestService.java
 /Users/admin/happygo/backend/src/main/java/com/happygo/parceldelivery/controller/MessageController.java
+/Users/admin/happygo/backend/src/main/java/com/happygo/parceldelivery/config/RestTemplateConfig.java
 /Users/admin/happygo/backend/src/main/java/com/happygo/parceldelivery/repository/MessageRepository.java
 /Users/admin/happygo/backend/src/main/java/com/happygo/parceldelivery/entity/Message.java
 /Users/admin/happygo/backend/src/main/java/com/happygo/parceldelivery/dto/MessageDto.java

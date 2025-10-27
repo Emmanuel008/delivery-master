@@ -113,7 +113,23 @@ public class MessageService {
 
         return result;
     }
-
+    
+    // Getter methods for debugging
+    public String getApiUrl() {
+        return apiUrl;
+    }
+    
+    public String getApiKey() {
+        return apiKey;
+    }
+    
+    public String getSenderId() {
+        return senderId;
+    }
+    
+    public String getDeliveryCallback() {
+        return deliveryCallback;
+    }
 }
 
 

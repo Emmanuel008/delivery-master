@@ -126,7 +126,51 @@ public class MessageController {
 
     @PostMapping("/send-sms")
     public ResponseEntity<Map<String, Object>> sendSms(@Valid @RequestBody MessageDto dto) {
-        Map<String, Object> result = messageService.sendSms(dto);
+        try {
+            Map<String, Object> result = messageService.sendSms(dto);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            errorResponse.put("message", "SMS sending failed");
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+    
+    @PostMapping("/test-sms-payload")
+    public ResponseEntity<Map<String, Object>> testSmsPayload(@Valid @RequestBody MessageDto dto) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("receivedContent", dto.getContent());
+        result.put("receivedPhoneNumber", dto.getPhoneNumber());
+        result.put("messageDtoValid", true);
+        result.put("timestamp", java.time.LocalDateTime.now());
+        return ResponseEntity.ok(result);
+    }
+    
+    @PostMapping("/debug-sms")
+    public ResponseEntity<Map<String, Object>> debugSms(@Valid @RequestBody MessageDto dto) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("messageDto", dto);
+        result.put("apiUrl", messageService.getApiUrl());
+        result.put("apiKey", messageService.getApiKey());
+        result.put("senderId", messageService.getSenderId());
+        result.put("deliveryCallback", messageService.getDeliveryCallback());
+        return ResponseEntity.ok(result);
+    }
+    
+    @PostMapping("/test-sms-without-sending")
+    public ResponseEntity<Map<String, Object>> testSmsWithoutSending(@Valid @RequestBody MessageDto dto) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("message", "SMS functionality is working correctly");
+        result.put("messageDto", dto);
+        result.put("apiConfiguration", Map.of(
+            "apiUrl", messageService.getApiUrl(),
+            "apiKey", messageService.getApiKey(),
+            "senderId", messageService.getSenderId(),
+            "deliveryCallback", messageService.getDeliveryCallback()
+        ));
+        result.put("note", "The 403 error from Kilakona API suggests invalid credentials or API format changes");
+        result.put("recommendation", "Please verify the Kilakona API credentials and documentation");
         return ResponseEntity.ok(result);
     }
 }

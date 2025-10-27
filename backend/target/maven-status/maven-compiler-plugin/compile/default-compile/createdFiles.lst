@@ -1,0 +1,15 @@
+com/happygo/parceldelivery/config/RestTemplateConfig.class
+com/happygo/parceldelivery/config/CorsConfig.class
+com/happygo/parceldelivery/repository/MessageRepository.class
+com/happygo/parceldelivery/config/WebSocketConfig.class
+com/happygo/parceldelivery/entity/ParcelRequest.class
+com/happygo/parceldelivery/dto/MessageDto.class
+com/happygo/parceldelivery/service/ParcelRequestService.class
+com/happygo/parceldelivery/controller/ParcelRequestController.class
+com/happygo/parceldelivery/service/MessageService.class
+com/happygo/parceldelivery/controller/MessageController.class
+com/happygo/parceldelivery/repository/ParcelRequestRepository.class
+com/happygo/parceldelivery/ParcelDeliveryApplication.class
+com/happygo/parceldelivery/entity/Message.class
+com/happygo/parceldelivery/dto/ParcelRequestDto.class
+com/happygo/parceldelivery/service/MessageService$1.class
