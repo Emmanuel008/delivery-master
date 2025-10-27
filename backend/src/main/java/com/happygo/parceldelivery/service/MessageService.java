@@ -77,7 +77,9 @@ public class MessageService {
         payload.put("senderId", senderId);
         payload.put("messageType", "text");
         payload.put("message", dto.getContent());
-        payload.put("contacts", dto.getPhoneNumber().replace("+", "")); // API expects without '+'
+        
+        // Since API expects without '+', remove + from phone number
+        payload.put("contacts", dto.getPhoneNumber().replace("+", "")); 
         payload.put("deliveryReportUrl", deliveryCallback != null ? deliveryCallback : "");
 
         /* Log request info */
