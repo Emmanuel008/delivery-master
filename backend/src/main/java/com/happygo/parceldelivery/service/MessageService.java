@@ -109,10 +109,37 @@ public class MessageService {
             logger.info("Kilakona SMS response: status={}, body={}", 
                 response.getStatusCode(), response.getBody());
 
-            // Persist outbox record on success path as well
-            String statusText = String.format("HTTP %d - %s", response.getStatusCode().value(),
-                    safeSnippet(response.getBody()));
-            outboxSmsRepository.save(new OutboxSms(dto.getContent(), dto.getPhoneNumber(), statusText));
+            // Parse response to extract messageId and save properly
+            String messageId = null;
+            String status = "Pending";
+            
+            if (response.getStatusCode().is2xxSuccessful()) {
+                try {
+                    // Parse JSON response to extract shootId
+                    String responseBody = response.getBody();
+                    if (responseBody != null && responseBody.contains("\"shootId\"")) {
+                        // Simple extraction of shootId from JSON
+                        int startIndex = responseBody.indexOf("\"shootId\":\"") + 11;
+                        int endIndex = responseBody.indexOf("\"", startIndex);
+                        if (startIndex > 10 && endIndex > startIndex) {
+                            messageId = responseBody.substring(startIndex, endIndex);
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.warn("Failed to parse messageId from response: {}", e.getMessage());
+                }
+            } else {
+                status = "Failed";
+            }
+
+            // Save outbox record with proper structure
+            outboxSmsRepository.save(new OutboxSms(
+                dto.getContent(), 
+                dto.getPhoneNumber(), 
+                status, 
+                messageId, 
+                response.getBody()
+            ));
         } 
         catch (RestClientResponseException ex) {
             result.put("statusCode", ex.getStatusCode().value());
@@ -121,19 +148,28 @@ public class MessageService {
             logger.error("Kilakona SMS request failed: status={}, body={}", 
                 ex.getStatusCode(), ex.getResponseBodyAsString());
 
-            // Persist outbox record on provider error
-            String statusText = String.format("HTTP %d - %s", ex.getStatusCode().value(),
-                    safeSnippet(ex.getResponseBodyAsString()));
-            outboxSmsRepository.save(new OutboxSms(dto.getContent(), dto.getPhoneNumber(), statusText));
+            // Save outbox record on provider error
+            outboxSmsRepository.save(new OutboxSms(
+                dto.getContent(), 
+                dto.getPhoneNumber(), 
+                "Failed", 
+                null, 
+                ex.getResponseBodyAsString()
+            ));
         } 
         catch (Exception ex) {
             result.put("statusCode", 0);
             result.put("error", ex.getMessage());
             logger.error("Kilakona SMS request error", ex);
 
-            // Persist outbox record on unexpected error
-            String statusText = String.format("ERROR - %s", safeSnippet(ex.getMessage()));
-            outboxSmsRepository.save(new OutboxSms(dto.getContent(), dto.getPhoneNumber(), statusText));
+            // Save outbox record on unexpected error
+            outboxSmsRepository.save(new OutboxSms(
+                dto.getContent(), 
+                dto.getPhoneNumber(), 
+                "Error", 
+                null, 
+                ex.getMessage()
+            ));
         }
 
         return result;

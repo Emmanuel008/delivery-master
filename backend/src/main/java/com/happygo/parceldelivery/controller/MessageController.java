@@ -147,30 +147,4 @@ public class MessageController {
         return ResponseEntity.ok(result);
     }
     
-    @PostMapping("/debug-sms")
-    public ResponseEntity<Map<String, Object>> debugSms(@Valid @RequestBody MessageDto dto) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("messageDto", dto);
-        result.put("apiUrl", messageService.getApiUrl());
-        result.put("apiKey", messageService.getApiKey());
-        result.put("senderId", messageService.getSenderId());
-        result.put("deliveryCallback", messageService.getDeliveryCallback());
-        return ResponseEntity.ok(result);
-    }
-    
-    @PostMapping("/test-sms-without-sending")
-    public ResponseEntity<Map<String, Object>> testSmsWithoutSending(@Valid @RequestBody MessageDto dto) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("message", "SMS functionality is working correctly");
-        result.put("messageDto", dto);
-        result.put("apiConfiguration", Map.of(
-            "apiUrl", messageService.getApiUrl(),
-            "apiKey", messageService.getApiKey(),
-            "senderId", messageService.getSenderId(),
-            "deliveryCallback", messageService.getDeliveryCallback()
-        ));
-        result.put("note", "The 403 error from Kilakona API suggests invalid credentials or API format changes");
-        result.put("recommendation", "Please verify the Kilakona API credentials and documentation");
-        return ResponseEntity.ok(result);
-    }
 }

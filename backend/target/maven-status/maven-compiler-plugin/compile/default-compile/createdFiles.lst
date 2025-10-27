@@ -8,7 +8,10 @@ com/happygo/parceldelivery/service/ParcelRequestService.class
 com/happygo/parceldelivery/controller/ParcelRequestController.class
 com/happygo/parceldelivery/service/MessageService.class
 com/happygo/parceldelivery/controller/MessageController.class
+com/happygo/parceldelivery/repository/OutboxSmsRepository.class
+com/happygo/parceldelivery/controller/SmsCallbackController.class
 com/happygo/parceldelivery/repository/ParcelRequestRepository.class
 com/happygo/parceldelivery/ParcelDeliveryApplication.class
+com/happygo/parceldelivery/entity/OutboxSms.class
 com/happygo/parceldelivery/entity/Message.class
 com/happygo/parceldelivery/dto/ParcelRequestDto.class
