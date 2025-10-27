@@ -28,7 +28,7 @@ public class MessageService {
     @Autowired
     private MessageRepository messageRepository;
     
-    @Value("${kilakona.api.url:https://messaging.kilakona.co.tz/api/v1/send-message}")
+    @Value("${kilakona.api.url:https://messaging.kilakona.co.tz/api/v1/vendor/message/send}")
     private String apiUrl;
     
     @Value("${kilakona.api.key:MY_API_KEY}")
@@ -68,48 +68,44 @@ public class MessageService {
     public Map<String, Object> sendSms(MessageDto dto) {
         RestTemplate restTemplate = new RestTemplate();
 
+        // --- Set headers exactly as in cURL ---
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Content-Type", "application/json");
         headers.set("api_key", apiKey);
         headers.set("api_secret", apiSecret);
 
+        // --- Match payload exactly to the cURL request ---
         Map<String, Object> payload = new HashMap<>();
         payload.put("senderId", senderId);
         payload.put("messageType", "text");
         payload.put("message", dto.getContent());
-        payload.put("contacts", dto.getPhoneNumber());
-        payload.put("deliveryReportUrl", deliveryCallback);
+        payload.put("contacts", dto.getPhoneNumber().replace("+", "")); // API expects without '+'
+        payload.put("deliveryReportUrl", deliveryCallback != null ? deliveryCallback : "");
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Sending SMS via Kilakona: url={}, senderId={}, contacts={}, hasDeliveryUrl={}, contentLength={}",
-                    apiUrl, senderId, dto.getPhoneNumber(), deliveryCallback != null && !deliveryCallback.isEmpty(),
-                    dto.getContent() != null ? dto.getContent().length() : 0);
-        }
+        // Log request info
+        logger.info("Sending SMS to Kilakona => contacts={}, senderId={}, apiUrl={}", 
+            dto.getPhoneNumber(), senderId, apiUrl);
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
         Map<String, Object> result = new HashMap<>();
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, request, String.class);
+
             result.put("statusCode", response.getStatusCode().value());
+            result.put("body", response.getBody());
 
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                Map<String, Object> body = mapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
-                result.put("body", body);
-            } catch (Exception ex) {
-                result.put("body", response.getBody());
-                result.put("parseError", ex.getMessage());
-            }
-
-        } catch (RestClientResponseException ex) {
-            // Capture non-2xx responses (e.g., 403) and include response body if present
+            logger.info("Kilakona SMS response: status={}, body={}", 
+                response.getStatusCode(), response.getBody());
+        } 
+        catch (RestClientResponseException ex) {
             result.put("statusCode", ex.getRawStatusCode());
             result.put("body", ex.getResponseBodyAsString());
             result.put("error", ex.getMessage());
-            logger.warn("Kilakona SMS request failed: status={}, body={}", ex.getRawStatusCode(), ex.getResponseBodyAsString());
-        } catch (Exception ex) {
+            logger.error("Kilakona SMS request failed: status={}, body={}", 
+                ex.getRawStatusCode(), ex.getResponseBodyAsString());
+        } 
+        catch (Exception ex) {
             result.put("statusCode", 0);
             result.put("error", ex.getMessage());
             logger.error("Kilakona SMS request error", ex);
@@ -117,5 +113,7 @@ public class MessageService {
 
         return result;
     }
+
 }
+
 
