@@ -40,7 +40,7 @@ public class MessageService {
     @Value("${kilakona.sender.id:MY_SENDER_ID}")
     private String senderId;
     
-    @Value("${kilakona.delivery.callback:MY_DELIVERY_CALLBACK}")
+    @Value("${kilakona.delivery.callback:''}")
     private String deliveryCallback;
     
     public Message createMessage(MessageDto dto) {
