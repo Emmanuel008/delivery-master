@@ -133,12 +133,15 @@ public class MessageService {
             }
 
             // Save outbox record with proper structure
+            String fullResponse = String.format("Status: %d, Body: %s", 
+                response.getStatusCode().value(), response.getBody());
+            
             outboxSmsRepository.save(new OutboxSms(
                 dto.getContent(), 
                 dto.getPhoneNumber(), 
                 status, 
                 messageId, 
-                response.getBody()
+                fullResponse
             ));
         } 
         catch (RestClientResponseException ex) {
@@ -149,12 +152,15 @@ public class MessageService {
                 ex.getStatusCode(), ex.getResponseBodyAsString());
 
             // Save outbox record on provider error
+            String fullErrorResponse = String.format("Status: %d, Body: %s, Error: %s", 
+                ex.getStatusCode().value(), ex.getResponseBodyAsString(), ex.getMessage());
+            
             outboxSmsRepository.save(new OutboxSms(
                 dto.getContent(), 
                 dto.getPhoneNumber(), 
                 "Failed", 
                 null, 
-                ex.getResponseBodyAsString()
+                fullErrorResponse
             ));
         } 
         catch (Exception ex) {
@@ -163,12 +169,14 @@ public class MessageService {
             logger.error("Kilakona SMS request error", ex);
 
             // Save outbox record on unexpected error
+            String fullExceptionResponse = String.format("Status: 0, Error: %s", ex.getMessage());
+            
             outboxSmsRepository.save(new OutboxSms(
                 dto.getContent(), 
                 dto.getPhoneNumber(), 
                 "Error", 
                 null, 
-                ex.getMessage()
+                fullExceptionResponse
             ));
         }
 
