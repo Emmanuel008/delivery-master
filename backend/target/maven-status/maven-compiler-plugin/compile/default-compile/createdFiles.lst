@@ -12,4 +12,3 @@ com/happygo/parceldelivery/repository/ParcelRequestRepository.class
 com/happygo/parceldelivery/ParcelDeliveryApplication.class
 com/happygo/parceldelivery/entity/Message.class
 com/happygo/parceldelivery/dto/ParcelRequestDto.class
-com/happygo/parceldelivery/service/MessageService$1.class

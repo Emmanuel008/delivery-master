@@ -2,7 +2,9 @@ package com.happygo.parceldelivery.service;
 
 import com.happygo.parceldelivery.dto.MessageDto;
 import com.happygo.parceldelivery.entity.Message;
+import com.happygo.parceldelivery.entity.OutboxSms;
 import com.happygo.parceldelivery.repository.MessageRepository;
+import com.happygo.parceldelivery.repository.OutboxSmsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,9 @@ public class MessageService {
     
     @Autowired
     private MessageRepository messageRepository;
+    
+    @Autowired
+    private OutboxSmsRepository outboxSmsRepository;
     
     @Value("${kilakona.api.url:API_URL}")
     private String apiUrl;
@@ -63,6 +68,12 @@ public class MessageService {
         return messageRepository.save(message);
     }
 
+    private String safeSnippet(String s) {
+        if (s == null) return "";
+        String trimmed = s.replaceAll("\n", " ");
+        return trimmed.length() > 500 ? trimmed.substring(0, 500) + "..." : trimmed;
+    }
+
     public Map<String, Object> sendSms(MessageDto dto) {
         RestTemplate restTemplate = new RestTemplate();
 
@@ -97,6 +108,11 @@ public class MessageService {
 
             logger.info("Kilakona SMS response: status={}, body={}", 
                 response.getStatusCode(), response.getBody());
+
+            // Persist outbox record on success path as well
+            String statusText = String.format("HTTP %d - %s", response.getStatusCode().value(),
+                    safeSnippet(response.getBody()));
+            outboxSmsRepository.save(new OutboxSms(dto.getContent(), dto.getPhoneNumber(), statusText));
         } 
         catch (RestClientResponseException ex) {
             result.put("statusCode", ex.getStatusCode().value());
@@ -104,31 +120,23 @@ public class MessageService {
             result.put("error", ex.getMessage());
             logger.error("Kilakona SMS request failed: status={}, body={}", 
                 ex.getStatusCode(), ex.getResponseBodyAsString());
+
+            // Persist outbox record on provider error
+            String statusText = String.format("HTTP %d - %s", ex.getStatusCode().value(),
+                    safeSnippet(ex.getResponseBodyAsString()));
+            outboxSmsRepository.save(new OutboxSms(dto.getContent(), dto.getPhoneNumber(), statusText));
         } 
         catch (Exception ex) {
             result.put("statusCode", 0);
             result.put("error", ex.getMessage());
             logger.error("Kilakona SMS request error", ex);
+
+            // Persist outbox record on unexpected error
+            String statusText = String.format("ERROR - %s", safeSnippet(ex.getMessage()));
+            outboxSmsRepository.save(new OutboxSms(dto.getContent(), dto.getPhoneNumber(), statusText));
         }
 
         return result;
-    }
-    
-    // Getter methods for debugging
-    public String getApiUrl() {
-        return apiUrl;
-    }
-    
-    public String getApiKey() {
-        return apiKey;
-    }
-    
-    public String getSenderId() {
-        return senderId;
-    }
-    
-    public String getDeliveryCallback() {
-        return deliveryCallback;
     }
 }
 
