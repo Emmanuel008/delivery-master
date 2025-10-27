@@ -11,8 +11,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClientResponseException;
@@ -28,19 +26,19 @@ public class MessageService {
     @Autowired
     private MessageRepository messageRepository;
     
-    @Value("${kilakona.api.url:https://messaging.kilakona.co.tz/api/v1/vendor/message/send}")
+    @Value("${kilakona.api.url:API_URL}")
     private String apiUrl;
     
-    @Value("${kilakona.api.key:MY_API_KEY}")
+    @Value("${kilakona.api.key:API_KEY}")
     private String apiKey;
     
-    @Value("${kilakona.api.secret:MY_API_SECRET}")
+    @Value("${kilakona.api.secret:API_SECRET}")
     private String apiSecret;
     
-    @Value("${kilakona.sender.id:MY_SENDER_ID}")
+    @Value("${kilakona.sender.id:SENDER_ID}")
     private String senderId;
     
-    @Value("${kilakona.delivery.callback:''}")
+    @Value("${kilakona.delivery.callback:DELIVERY_CALLBACK}")
     private String deliveryCallback;
     
     public Message createMessage(MessageDto dto) {
@@ -68,13 +66,13 @@ public class MessageService {
     public Map<String, Object> sendSms(MessageDto dto) {
         RestTemplate restTemplate = new RestTemplate();
 
-        // --- Set headers exactly as in cURL ---
+        /* Set headers */
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("api_key", apiKey);
         headers.set("api_secret", apiSecret);
 
-        // --- Match payload exactly to the cURL request ---
+        /* Set payload */
         Map<String, Object> payload = new HashMap<>();
         payload.put("senderId", senderId);
         payload.put("messageType", "text");
@@ -82,7 +80,7 @@ public class MessageService {
         payload.put("contacts", dto.getPhoneNumber().replace("+", "")); // API expects without '+'
         payload.put("deliveryReportUrl", deliveryCallback != null ? deliveryCallback : "");
 
-        // Log request info
+        /* Log request info */
         logger.info("Sending SMS to Kilakona => contacts={}, senderId={}, apiUrl={}", 
             dto.getPhoneNumber(), senderId, apiUrl);
 
@@ -99,11 +97,11 @@ public class MessageService {
                 response.getStatusCode(), response.getBody());
         } 
         catch (RestClientResponseException ex) {
-            result.put("statusCode", ex.getRawStatusCode());
+            result.put("statusCode", ex.getStatusCode().value());
             result.put("body", ex.getResponseBodyAsString());
             result.put("error", ex.getMessage());
             logger.error("Kilakona SMS request failed: status={}, body={}", 
-                ex.getRawStatusCode(), ex.getResponseBodyAsString());
+                ex.getStatusCode(), ex.getResponseBodyAsString());
         } 
         catch (Exception ex) {
             result.put("statusCode", 0);
