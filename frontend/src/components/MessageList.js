@@ -5,10 +5,22 @@ const MessageList = ({ messages }) => {
     return new Date(dateString).toLocaleString();
   };
 
-  const getStatusBadge = (isSent) => {
+  const getStatusBadge = (status) => {
+    let badgeClass = 'status-unread';
+    let statusText = status || 'Pending';
+    
+    if (status === 'Delivered') {
+      badgeClass = 'status-read';
+    } else if (status === 'Failed' || status === 'Error') {
+      badgeClass = 'status-unread';
+      statusText = status;
+    } else {
+      statusText = 'Pending';
+    }
+    
     return (
-      <span className={`status-badge ${isSent ? 'status-read' : 'status-unread'}`}>
-        {isSent ? 'Sent' : 'Draft'}
+      <span className={`status-badge ${badgeClass}`}>
+        {statusText}
       </span>
     );
   };
@@ -33,9 +45,9 @@ const MessageList = ({ messages }) => {
               <tr key={msg.id}>
                 <td>{msg.phoneNumber}</td>
                 <td style={{ maxWidth: '300px', wordWrap: 'break-word' }}>
-                  {msg.content}
+                  {msg.message}
                 </td>
-                <td>{getStatusBadge(msg.isSent)}</td>
+                <td>{getStatusBadge(msg.status)}</td>
                 <td>{formatDate(msg.createdAt)}</td>
               </tr>
             ))}

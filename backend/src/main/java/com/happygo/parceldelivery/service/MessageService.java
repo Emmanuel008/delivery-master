@@ -55,6 +55,10 @@ public class MessageService {
         return messageRepository.findAllByOrderByCreatedAtDesc();
     }
     
+    public List<OutboxSms> getAllSmsMessages() {
+        return outboxSmsRepository.findAll();
+    }
+    
     public Message getMessageById(Long id) {
         return messageRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Message not found"));

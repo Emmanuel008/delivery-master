@@ -2,6 +2,7 @@ package com.happygo.parceldelivery.controller;
 
 import com.happygo.parceldelivery.dto.MessageDto;
 import com.happygo.parceldelivery.entity.Message;
+import com.happygo.parceldelivery.entity.OutboxSms;
 import com.happygo.parceldelivery.service.MessageService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,12 @@ public class MessageController {
     public ResponseEntity<List<Message>> getAllMessages() {
         List<Message> messages = messageService.getAllMessages();
         return ResponseEntity.ok(messages);
+    }
+    
+    @GetMapping("/sms")
+    public ResponseEntity<List<OutboxSms>> getAllSmsMessages() {
+        List<OutboxSms> smsMessages = messageService.getAllSmsMessages();
+        return ResponseEntity.ok(smsMessages);
     }
     
     @GetMapping("/{id}")

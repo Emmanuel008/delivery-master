@@ -21,7 +21,7 @@ const AdminDashboard = () => {
     try {
       const [requestsResponse, messagesResponse, unreadResponse] = await Promise.all([
         axios.get('/api/parcel-requests'),
-        axios.get('/api/messages'),
+        axios.get('/api/messages/sms'),
         axios.get('/api/parcel-requests/unread-count')
       ]);
 
