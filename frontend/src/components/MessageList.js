@@ -45,7 +45,7 @@ const MessageList = ({ messages }) => {
               <tr key={msg.id}>
                 <td>{msg.phoneNumber}</td>
                 <td style={{ maxWidth: '300px', wordWrap: 'break-word' }}>
-                  {msg.message}
+                  {msg.message || msg.content}
                 </td>
                 <td>{getStatusBadge(msg.status)}</td>
                 <td>{formatDate(msg.createdAt)}</td>

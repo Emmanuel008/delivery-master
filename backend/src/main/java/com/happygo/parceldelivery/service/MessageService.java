@@ -20,6 +20,8 @@ import org.springframework.web.client.RestClientResponseException;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Service
 public class MessageService {
@@ -56,7 +58,48 @@ public class MessageService {
     }
     
     public List<OutboxSms> getAllSmsMessages() {
-        return outboxSmsRepository.findAll();
+        return outboxSmsRepository.findAllByOrderByCreatedAtDesc();
+    }
+    
+    public List<Map<String, Object>> getAllMessagesCombined() {
+        List<Map<String, Object>> combined = new ArrayList<>();
+        
+        // Get all draft messages from messages table
+        List<Message> draftMessages = messageRepository.findAllByOrderByCreatedAtDesc();
+        for (Message msg : draftMessages) {
+            Map<String, Object> messageMap = new HashMap<>();
+            messageMap.put("id", msg.getId());
+            messageMap.put("phoneNumber", msg.getPhoneNumber());
+            messageMap.put("content", msg.getContent());
+            messageMap.put("status", msg.getIsSent() ? "Sent" : "Draft");
+            messageMap.put("createdAt", msg.getCreatedAt());
+            messageMap.put("messageId", null);
+            messageMap.put("response", null);
+            combined.add(messageMap);
+        }
+        
+        // Get all SMS messages from outbox_sms table  
+        List<OutboxSms> smsMessages = outboxSmsRepository.findAllByOrderByCreatedAtDesc();
+        for (OutboxSms sms : smsMessages) {
+            Map<String, Object> smsMap = new HashMap<>();
+            smsMap.put("id", sms.getId());
+            smsMap.put("phoneNumber", sms.getPhoneNumber());
+            smsMap.put("content", sms.getMessage());
+            smsMap.put("status", sms.getStatus());
+            smsMap.put("createdAt", sms.getCreatedAt());
+            smsMap.put("messageId", sms.getMessageId());
+            smsMap.put("response", sms.getResponse());
+            combined.add(smsMap);
+        }
+        
+        // Sort by createdAt descending
+        combined.sort((a, b) -> {
+            String dateA = a.get("createdAt").toString();
+            String dateB = b.get("createdAt").toString();
+            return dateB.compareTo(dateA);
+        });
+        
+        return combined;
     }
     
     public Message getMessageById(Long id) {

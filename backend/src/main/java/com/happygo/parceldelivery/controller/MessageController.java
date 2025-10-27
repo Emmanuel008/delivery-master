@@ -41,6 +41,12 @@ public class MessageController {
         return ResponseEntity.ok(smsMessages);
     }
     
+    @GetMapping("/combined")
+    public ResponseEntity<List<Map<String, Object>>> getAllMessagesCombined() {
+        List<Map<String, Object>> combinedMessages = messageService.getAllMessagesCombined();
+        return ResponseEntity.ok(combinedMessages);
+    }
+    
     @GetMapping("/{id}")
     public ResponseEntity<Message> getMessageById(@PathVariable Long id) {
         Message message = messageService.getMessageById(id);
