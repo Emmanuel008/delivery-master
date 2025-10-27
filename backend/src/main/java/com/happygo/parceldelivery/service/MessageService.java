@@ -70,7 +70,7 @@ public class MessageService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Accept", "application/json");
+        headers.set("Content-Type", "application/json");
         headers.set("api_key", apiKey);
         headers.set("api_secret", apiSecret);
 
