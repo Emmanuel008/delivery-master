@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
 import java.util.HashMap;
@@ -20,6 +23,7 @@ import java.util.Map;
 
 @Service
 public class MessageService {
+    private static final Logger logger = LoggerFactory.getLogger(MessageService.class);
     
     @Autowired
     private MessageRepository messageRepository;
@@ -66,6 +70,7 @@ public class MessageService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Accept", "application/json");
         headers.set("api_key", apiKey);
         headers.set("api_secret", apiSecret);
 
@@ -76,20 +81,38 @@ public class MessageService {
         payload.put("contacts", dto.getPhoneNumber());
         payload.put("deliveryReportUrl", deliveryCallback);
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("Sending SMS via Kilakona: url={}, senderId={}, contacts={}, hasDeliveryUrl={}, contentLength={}",
+                    apiUrl, senderId, dto.getPhoneNumber(), deliveryCallback != null && !deliveryCallback.isEmpty(),
+                    dto.getContent() != null ? dto.getContent().length() : 0);
+        }
+
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
-        ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, request, String.class);
-
         Map<String, Object> result = new HashMap<>();
-        result.put("statusCode", response.getStatusCode().value());
-
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, Object> body = mapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
-            result.put("body", body);
+            ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, request, String.class);
+            result.put("statusCode", response.getStatusCode().value());
+
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, Object> body = mapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {});
+                result.put("body", body);
+            } catch (Exception ex) {
+                result.put("body", response.getBody());
+                result.put("parseError", ex.getMessage());
+            }
+
+        } catch (RestClientResponseException ex) {
+            // Capture non-2xx responses (e.g., 403) and include response body if present
+            result.put("statusCode", ex.getRawStatusCode());
+            result.put("body", ex.getResponseBodyAsString());
+            result.put("error", ex.getMessage());
+            logger.warn("Kilakona SMS request failed: status={}, body={}", ex.getRawStatusCode(), ex.getResponseBodyAsString());
         } catch (Exception ex) {
-            result.put("body", response.getBody());
-            result.put("parseError", ex.getMessage());
+            result.put("statusCode", 0);
+            result.put("error", ex.getMessage());
+            logger.error("Kilakona SMS request error", ex);
         }
 
         return result;
