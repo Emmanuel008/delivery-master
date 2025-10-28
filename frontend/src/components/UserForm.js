@@ -50,92 +50,102 @@ const UserForm = () => {
   return (
     <div className="container">
       <div className="card">
-        <h2>Parcel Delivery Request</h2>
-        <p>Please fill out the form below to submit your parcel delivery request.</p>
+        <div style={{ marginBottom: 12 }}>
+          <h2 style={{ marginBottom: 6 }}>Parcel Delivery Request</h2>
+          <p className="subtle">Fill in your details and we will reach out to confirm delivery.</p>
+        </div>
         
         {message && (
-          <div className={`notification ${message.includes('Error') ? 'error' : 'success'}`}>
+          <div className={`notification ${message.includes('Error') ? 'error' : 'success'}`} style={{ marginBottom: 16 }}>
             {message}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="name">Full Name *</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              placeholder="Enter your full name"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="location">Delivery Location *</label>
-            <input
-              type="text"
-              id="location"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              required
-              placeholder="Enter delivery address"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="price">Price (USD) *</label>
-            <input
-              type="number"
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              required
-              min="0"
-              step="0.01"
-              placeholder="Enter price"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="phoneNumber">Phone Number</label>
-            <input
-              type="tel"
-              id="phoneNumber"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              placeholder="Enter your phone number (optional)"
-            />
-          </div>
-
-          <div className="form-group">
-            <div className="checkbox-group">
+          <div className="form-grid">
+            <div className="form-group">
+              <label htmlFor="name" className="label-required">Full Name</label>
               <input
-                type="checkbox"
-                id="canDeliver"
-                name="canDeliver"
-                checked={formData.canDeliver}
+                className="input"
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
                 required
+                placeholder="e.g. John Doe"
               />
-              <label htmlFor="canDeliver">
-                Can we deliver the parcel to you? *
-              </label>
+              <div className="hint">Your legal or preferred full name.</div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="phoneNumber">Phone Number</label>
+              <input
+                className="input"
+                type="tel"
+                id="phoneNumber"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                placeholder="e.g. +255625313162"
+              />
+              <div className="hint">Include country code (e.g. +255).</div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="location" className="label-required">Delivery Location</label>
+              <input
+                className="input"
+                type="text"
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                required
+                placeholder="Street, area or landmark"
+              />
+              <div className="hint">Provide enough detail for the courier to find you.</div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="price" className="label-required">Price (TZS)</label>
+              <input
+                className="input"
+                type="number"
+                id="price"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                required
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              />
+              <div className="hint">Estimated parcel value or delivery fee.</div>
             </div>
           </div>
 
-          <button 
-            type="submit" 
-            className="btn"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Request'}
-          </button>
+          <div className="checkbox-card">
+            <input
+              type="checkbox"
+              id="canDeliver"
+              name="canDeliver"
+              checked={formData.canDeliver}
+              onChange={handleChange}
+              required
+            />
+            <label htmlFor="canDeliver">Can we deliver the parcel to you?</label>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+            <button 
+              type="submit" 
+              className="btn btn-primary btn-block"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : 'NILETEE'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

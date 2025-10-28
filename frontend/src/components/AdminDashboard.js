@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import ParcelRequestList from './ParcelRequestList';
 import MessageComposer from './MessageComposer';
@@ -10,7 +10,10 @@ const AdminDashboard = () => {
   const [messages, setMessages] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('requests');
+  const [activeTab, setActiveTab] = useState('messages');
+
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     fetchData();
@@ -21,7 +24,7 @@ const AdminDashboard = () => {
     try {
       const [requestsResponse, messagesResponse, unreadResponse] = await Promise.all([
         axios.get('/api/parcel-requests'),
-        axios.get('/api/messages/combined'),
+        axios.get('/api/messages/sms'),
         axios.get('/api/parcel-requests/unread-count')
       ]);
 
@@ -60,6 +63,30 @@ const AdminDashboard = () => {
     setMessages(prev => [newMessage, ...prev]);
   };
 
+  // Metrics
+  const { pendingCount, deliveredCount, failedCount } = useMemo(() => {
+    const toLower = (v) => (v || '').toString().toLowerCase();
+    let pending = 0, delivered = 0, failed = 0;
+    for (const m of messages) {
+      const s = toLower(m.status);
+      if (s === 'delivered') delivered++;
+      else if (s === 'failed' || s === 'error') failed++;
+      else pending++;
+    }
+    return { pendingCount: pending, deliveredCount: delivered, failedCount: failed };
+  }, [messages]);
+
+  // Filters
+  const filteredMessages = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return messages.filter(m => {
+      const matchesQuery = !q || (m.phoneNumber?.toLowerCase().includes(q) || m.message?.toLowerCase().includes(q));
+      const s = (m.status || '').toLowerCase();
+      const matchesStatus = statusFilter === 'all' || s === statusFilter;
+      return matchesQuery && matchesStatus;
+    });
+  }, [messages, search, statusFilter]);
+
   if (loading) {
     return (
       <div className="container">
@@ -72,54 +99,95 @@ const AdminDashboard = () => {
 
   return (
     <div className="container">
-      <div className="card">
-        <h2>Admin Dashboard</h2>
-        <p>Manage parcel delivery requests and send messages to customers.</p>
-        
-        {unreadCount > 0 && (
-          <div className="notification">
-            You have {unreadCount} unread parcel request{unreadCount > 1 ? 's' : ''}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="dashboard-header">
+          <h2>Admin Dashboard</h2>
+          <p className="subtle">Manage parcel requests and SMS notifications</p>
+        </div>
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-title">Unread Requests</div>
+            <div className="stat-value">{unreadCount}</div>
           </div>
-        )}
-
-        <div style={{ marginBottom: '20px' }}>
-          <button
-            className={`btn ${activeTab === 'requests' ? 'btn-success' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('requests')}
-            style={{ marginRight: '10px' }}
-          >
-            Parcel Requests ({parcelRequests.length})
-          </button>
-          <button
-            className={`btn ${activeTab === 'messages' ? 'btn-success' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('messages')}
-            style={{ marginRight: '10px' }}
-          >
-            Messages ({messages.length})
-          </button>
-          <button
-            className={`btn ${activeTab === 'compose' ? 'btn-success' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('compose')}
-          >
-            Compose Message
-          </button>
+          <div className="stat-card">
+            <div className="stat-title">SMS Pending</div>
+            <div className="stat-value warning">{pendingCount}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-title">SMS Delivered</div>
+            <div className="stat-value success">{deliveredCount}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-title">SMS Failed</div>
+            <div className="stat-value danger">{failedCount}</div>
+          </div>
         </div>
 
-        {activeTab === 'requests' && (
+        <div className="toolbar">
+          <div className="tabs">
+            <button
+              className={`tab ${activeTab === 'messages' ? 'active' : ''}`}
+              onClick={() => setActiveTab('messages')}
+            >
+              Messages ({messages.length})
+            </button>
+            <button
+              className={`tab ${activeTab === 'requests' ? 'active' : ''}`}
+              onClick={() => setActiveTab('requests')}
+            >
+              Parcel Requests ({parcelRequests.length})
+            </button>
+            <button
+              className={`tab ${activeTab === 'compose' ? 'active' : ''}`}
+              onClick={() => setActiveTab('compose')}
+            >
+              Compose Message
+            </button>
+          </div>
+          {activeTab === 'messages' && (
+            <div className="filters">
+              <input
+                className="input"
+                placeholder="Search by phone or content..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <select
+                className="select"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All statuses</option>
+                <option value="pending">Pending</option>
+                <option value="delivered">Delivered</option>
+                <option value="failed">Failed</option>
+                <option value="error">Error</option>
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {activeTab === 'messages' && (
+        <div className="card">
+          <MessageList messages={filteredMessages} />
+        </div>
+      )}
+
+      {activeTab === 'requests' && (
+        <div className="card">
           <ParcelRequestList
             requests={parcelRequests}
             onMarkAsRead={handleMarkAsRead}
           />
-        )}
+        </div>
+      )}
 
-        {activeTab === 'messages' && (
-          <MessageList messages={messages} />
-        )}
-
-        {activeTab === 'compose' && (
+      {activeTab === 'compose' && (
+        <div className="card">
           <MessageComposer onMessageSent={handleMessageSent} />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

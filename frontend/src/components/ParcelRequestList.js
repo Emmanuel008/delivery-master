@@ -13,6 +13,15 @@ const ParcelRequestList = ({ requests, onMarkAsRead }) => {
     );
   };
 
+  const formatTZS = (value) => {
+    if (value === null || value === undefined || isNaN(value)) return 'TZS 0';
+    try {
+      return new Intl.NumberFormat('en-TZ', { style: 'currency', currency: 'TZS', maximumFractionDigits: 0 }).format(value);
+    } catch (_) {
+      return `TZS ${Number(value).toFixed(0)}`;
+    }
+  };
+
   return (
     <div>
       <h3>Parcel Requests</h3>
@@ -24,7 +33,7 @@ const ParcelRequestList = ({ requests, onMarkAsRead }) => {
             <tr>
               <th>Name</th>
               <th>Location</th>
-              <th>Price</th>
+              <th>Price (TZS)</th>
               <th>Can Deliver</th>
               <th>Phone</th>
               <th>Status</th>
@@ -37,7 +46,7 @@ const ParcelRequestList = ({ requests, onMarkAsRead }) => {
               <tr key={request.id}>
                 <td>{request.name}</td>
                 <td>{request.location}</td>
-                <td>${request.price.toFixed(2)}</td>
+                <td>{formatTZS(request.price)}</td>
                 <td>{request.canDeliver ? 'Yes' : 'No'}</td>
                 <td>{request.phoneNumber || 'N/A'}</td>
                 <td>{getStatusBadge(request.isRead)}</td>
